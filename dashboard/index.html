@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flyxto Light House Console</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+    :root {
+      --bg:       #121212;
+      --card:     #1e1e1e;
+      --border:   #333333;
+      --accent:   #4f46e5;
+      --accent2:  #6366f1;
+      --glow:     rgba(0,0,0,0);
+      --online:   #10b981;
+      --offline:  #3f3f46;
+      --text:     #e4e4e7;
+      --text2:    #a1a1aa;
+      --r:        4px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      background: #18181b;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--online);
+    }
+    .logo h1 { font-size: 16px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .logo span { color: var(--text2); font-weight: 400; }
+    .logo h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent2); font-weight: 400; }
+    #online-count { font-size: 14px; color: var(--text2); font-weight: 500; }
+    #online-count b { color: var(--online); }
+
+    .btn {
+      padding: 8px 16px; border-radius: 4px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.1s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-outline {
+      background: #27272a; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: #52525b; background: #3f3f46; }
+    .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+    /* ── Main ── */
+    main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Master Control ── */
+    .master-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .master-card h2 {
+      font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+      color: var(--text2); text-transform: uppercase; margin-bottom: 20px;
+    }
+    .master-controls {
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    }
+    .control-group { display: flex; flex-direction: column; gap: 8px; }
+    .control-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+    input[type="color"] {
+      width: 54px; height: 42px; border: 1px solid var(--border);
+      border-radius: 10px; padding: 3px; background: rgba(0,0,0,0.2); cursor: pointer;
+      transition: border 0.2s;
+    }
+    input[type="color"]:hover { border-color: var(--accent2); }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 6px; background: rgba(255,255,255,0.05);
+      outline: none; cursor: pointer; width: 140px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 4px var(--accent);
+      transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+    .fx-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .fx-btn {
+      padding: 8px 14px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border); background: #27272a;
+      color: var(--text2); cursor: pointer; transition: all 0.1s; text-transform: uppercase;
+    }
+    .fx-btn:hover { border-color: #52525b; color: var(--text); background: #3f3f46; }
+    .fx-btn.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #fff;
+    }
+
+    #sync-btn {
+      padding: 12px 24px; font-size: 12px; font-weight: 700;
+      background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer;
+      letter-spacing: 1px; text-transform: uppercase; transition: all 0.1s;
+    }
+    #sync-btn:hover { background: var(--accent2); }
+    #sync-btn:active { transform: translateY(2px); }
+
+    .divider { width: 1px; height: 48px; background: var(--border); }
+
+    /* ── Lamp Grid ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+      color: var(--text2); text-transform: uppercase;
+    }
+    .lamp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .lamp-card {
+      background: var(--card); 
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px;
+      transition: border-color 0.1s;
+    }
+    .lamp-card.online { border-color: #3f3f46; }
+    .lamp-card.online:hover { border-color: #52525b; }
+    .lamp-card.offline { opacity: 0.5; filter: grayscale(100%); }
+    .lamp-card.offline:hover { opacity: 0.7; }
+
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-title { display: flex; align-items: center; gap: 10px; }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--offline); transition: background 0.3s, box-shadow 0.3s;
+    }
+    .status-dot.online {
+      background: var(--online);
+      box-shadow: 0 0 8px var(--online);
+    }
+    .card-title span { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+    .card-ip { font-size: 11px; color: var(--text2); font-family: monospace; }
+
+    .color-swatch {
+      width: 100%; height: 65px; border-radius: 10px;
+      background: rgb(255,80,0); margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.1); 
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+      transition: transform 0.2s, filter 0.2s;
+    }
+    .color-swatch:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+    .card-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .card-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+    .card-br-slider {
+      width: 100%; height: 4px; border-radius: 4px;
+      background: rgba(255,255,255,0.05); outline: none; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.02);
+    }
+    .card-br-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+      box-shadow: 0 0 10px var(--glow); transition: transform 0.1s;
+    }
+    .card-br-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .power-toggle {
+      width: 44px; height: 24px; border-radius: 12px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+      position: relative; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .power-toggle.on { background: var(--online); border-color: var(--online); box-shadow: 0 0 15px rgba(34,197,94,0.3); }
+    .power-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .power-toggle.on::after { left: 22px; }
+
+    .fx-badge {
+      font-size: 11px; padding: 4px 10px; border-radius: 6px;
+      background: rgba(124,58,237,0.15); color: var(--accent2);
+      font-weight: 600; border: 1px solid rgba(124,58,237,0.2);
+    }
+
+    /* ── Settings Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 28px; width: 620px; max-width: 95vw;
+      max-height: 85vh; overflow-y: auto;
+      transform: translateY(10px); transition: transform 0.2s, opacity 0.2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .modal p { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.4; }
+    
+    .auto-fill {
+      display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+      padding: 16px; background: #27272a; border-radius: var(--r);
+      border: 1px solid var(--border);
+    }
+    .auto-fill input[type="text"] {
+      flex: 1; background: #18181b; border: 1px solid var(--border);
+      border-radius: 4px; padding: 10px 14px; color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+    }
+    .auto-fill input:focus { border-color: var(--accent); }
+    
+    .ip-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 28px;
+    }
+    .ip-row { display: flex; align-items: center; justify-content: space-between; background: #27272a; padding: 8px 12px; border-radius: var(--r); border: 1px solid var(--border); }
+    .ip-row label { font-size: 11px; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+    .ip-row input {
+      background: #18181b; border: 1px solid var(--border);
+      border-radius: 4px; padding: 6px 10px; color: var(--text);
+      font-family: 'Roboto Mono', monospace; font-size: 12px; outline: none; text-align: right; width: 140px;
+    }
+    .ip-row input:focus { border-color: var(--accent); }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid var(--border); }
+    
+    /* ── Tabs ── */
+    .tabs-nav {
+      display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 12px 18px; font-size: 11px; font-weight: 700; color: var(--text2);
+      background: transparent; border: none; cursor: pointer; transition: all 0.2s;
+      text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent); border-bottom-color: var(--accent);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #18181b;
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: 12px 20px; font-size: 13px; font-weight: 600;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s ease-out; z-index: 300; pointer-events: none;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    
+    /* ── Color Presets ── */
+    .color-presets {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .preset-swatch {
+      width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .preset-swatch:hover { transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    
+    /* ── Lamp Groups ── */
+    .group-selector {
+      display: flex; gap: 8px; margin-bottom: 20px;
+    }
+    .group-btn {
+      padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+      color: var(--text2); cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .group-btn:hover { border-color: var(--accent2); color: var(--text); }
+    .group-btn.active {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .lamp-group-select {
+      background: rgba(0,0,0,0.2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 4px; font-size: 10px; padding: 2px 4px; outline: none; margin-left: 8px;
+      cursor: pointer;
+    }
+    
+    /* ── Vision Mixer UI ── */
+    .mixer-card {
+      background: #18181b; border: 1px solid var(--border); border-radius: var(--r);
+      padding: 20px; margin-bottom: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .mixer-bus {
+      display: flex; align-items: center; gap: 16px;
+      background: #121212; padding: 12px 16px; border-radius: var(--r); border: 1px solid var(--border);
+    }
+    .bus-label {
+      font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .bus-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bus-btn {
+      padding: 10px 20px; border-radius: 4px; font-size: 12px; font-weight: 600;
+      background: #27272a; color: var(--text2); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.1s; letter-spacing: 0.5px;
+    }
+    .bus-btn:hover { background: #3f3f46; border-color: #52525b; }
+    .bus-btn.active {
+      background: #ef4444; color: #fff; border-color: #f87171;
+    }
+    
+    .mixer-main { display: flex; gap: 16px; flex-wrap: wrap; }
+    .mixer-col {
+      background: #121212; padding: 16px; border-radius: var(--r); border: 1px solid var(--border); flex: 1; min-width: 280px;
+    }
+    
+    .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+    .color-btn {
+      height: 48px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
+      background: var(--c); cursor: pointer;
+      color: #fff; font-size: 10px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+    }
+    .color-btn:hover { filter: brightness(1.1); }
+
+    .color-picker-box {
+      display:flex; align-items:center; justify-content:center; 
+      background:#18181b; border-radius:4px; border:1px solid rgba(255,255,255,0.1); 
+      overflow:hidden; position:relative; cursor:pointer; height:48px;
+    }
+    .color-picker-box input {
+      width:150%; height:150%; padding:0; margin:0; border:none; cursor:pointer;
+    }
+    .color-picker-box span {
+      position:absolute; font-size:9px; font-weight:800; color:#fff; 
+      text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none;
+      text-transform:uppercase; letter-spacing:0.5px;
+    }
+    
+    .effect-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    
+    .action-bus { flex: 0.8; display: flex; gap: 20px; }
+    .action-buttons { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
+    .action-btn {
+      padding: 14px; border-radius: 4px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.1s; letter-spacing: 1px; color: #fff;
+      border: 1px solid rgba(255,255,255,0.1);
+      text-transform: uppercase;
+    }
+    .action-btn.blackout { background: #18181b; color: #ef4444; border-color: #ef4444; }
+    .action-btn.full-on { background: #f4f4f5; color: #18181b; border-color: #d4d4d8; }
+    .action-btn.sync-take { background: #2563eb; border-color: #60a5fa; padding: 20px; font-size: 14px; }
+    
+    .quick-pwr-btn {
+      padding: 10px 20px; border-radius: 4px; font-size: 11px; font-weight: 700;
+      background: #27272a; color: var(--text2); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.1s; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .quick-pwr-btn.active {
+      background: #10b981; color: #fff; border-color: #34d399;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <img src="logo.png" alt="Logo" style="width:32px; height:32px; border-radius:50%; margin-right:12px;">
+    <h1>Flyxto <span>Light House</span></h1>
+  </div>
+  <span id="online-count"><b>0</b> / 12 online</span>
+  <button class="btn btn-outline" onclick="openSettings()">⚙ Settings</button>
+</header>
+
+<!-- Main -->
+<main>
+
+  <!-- Vision Mixer Control -->
+  <div class="mixer-card">
+    <div class="mixer-bus target-bus">
+      <div class="bus-label">TARGET BUS</div>
+      <div class="bus-buttons" id="target-bus-container">
+        <!-- Dynamic -->
+      </div>
+    </div>
+
+    <div class="mixer-bus" style="background:#121212; flex-wrap:wrap; margin-top:-8px; border-top:none; border-top-left-radius:0; border-top-right-radius:0;">
+      <div class="bus-label" style="width:100%;">QUICK POWER (TOGGLES)</div>
+      <div id="quick-pwr-container" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <!-- Dynamic -->
+      </div>
+    </div>
+    
+    <div class="mixer-main">
+      <div class="mixer-col preset-bus">
+        <div class="bus-label">PRESET BUS (COLOR)</div>
+        <div class="color-grid">
+          <button class="color-btn" style="--c:#ffb46e" onclick="applyPreset('#ffb46e')">WARM</button>
+          <button class="color-btn" style="--c:#ffffff" onclick="applyPreset('#ffffff')">COOL</button>
+          <button class="color-btn" style="--c:#ff0000" onclick="applyPreset('#ff0000')">RED</button>
+          <button class="color-btn" style="--c:#00ff00" onclick="applyPreset('#00ff00')">GRN</button>
+          <button class="color-btn" style="--c:#0044ff" onclick="applyPreset('#0044ff')">BLU</button>
+          <button class="color-btn" style="--c:#aa00ff" onclick="applyPreset('#aa00ff')">PURP</button>
+          <button class="color-btn" style="--c:#ffaa00" onclick="applyPreset('#ffaa00')">GOLD</button>
+          <div class="color-picker-box" title="Custom Color">
+             <span>Custom</span>
+             <input type="color" id="master-color" value="#ff5000" onchange="applyPreset(this.value)">
+          </div>
+        </div>
+      </div>
+      
+      <div class="mixer-col effect-bus">
+        <div class="bus-label">EFFECT BUS</div>
+        <div class="effect-grid">
+          <button class="fx-btn active" data-fx="0" onclick="selectFx(0)">SOLID</button>
+          <button class="fx-btn" data-fx="1" onclick="selectFx(1)">RAINBOW</button>
+          <button class="fx-btn" data-fx="2" onclick="selectFx(2)">BREATHE</button>
+          <button class="fx-btn" data-fx="3" onclick="selectFx(3)">STROBE</button>
+        </div>
+        <div style="margin-top:20px;">
+           <div class="bus-label" style="display:flex; justify-content:space-between;">SPEED <span id="sp-val">128</span></div>
+           <input type="range" id="master-sp" min="1" max="255" value="128" style="width:100%; margin-top:8px;" 
+                  oninput="document.getElementById('sp-val').textContent=this.value; sendToTargets({sp: parseInt(this.value)});">
+        </div>
+      </div>
+      
+      <div class="mixer-col action-bus">
+        <div class="action-buttons">
+          <button class="action-btn blackout" onclick="blackout()">BLACKOUT</button>
+          <button class="action-btn full-on" onclick="fullOn()">FULL ON</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+             <span class="bus-label" style="margin:0;">MODE</span>
+             <button id="live-toggle-btn" class="quick-pwr-btn active" style="margin:0; padding:6px 12px; transform:none;" onclick="toggleLiveMode()">LIVE</button>
+          </div>
+          <button class="action-btn sync-take" id="btn-take" style="opacity:0.5; pointer-events:none;" onclick="syncAll(true)">TAKE</button>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(255,255,255,0.05); padding:12px;">
+          <input type="range" class="master-fader" id="master-br" min="10" max="255" value="180" orient="vertical" style="-webkit-appearance:slider-vertical; width:32px; height:130px; cursor:pointer;" 
+                 oninput="document.getElementById('br-val').textContent=this.value; sendToTargets({br: parseInt(this.value)});">
+          <div class="bus-label" style="margin-top:12px; text-align:center;">BRIGHT<br><span id="br-val" style="color:#fff; font-size:12px;">180</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lamp Grid -->
+  <div class="section-header">
+    <h2>Lamps</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" id="btn-all-on" onclick="allOn()">All ON</button>
+      <button class="btn btn-outline btn-sm" id="btn-all-off" onclick="allOff()">All OFF</button>
+    </div>
+  </div>
+
+  <div class="lamp-grid" id="lamp-grid"></div>
+
+</main>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+      <div>
+        <h2>Lamp Settings</h2>
+        <p style="margin-bottom:0;">Flyxto Light House System Configuration</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeSettings()" style="padding:8px;">✕</button>
+    </div>
+
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab(event, 'tab-network')">Network</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-wifi')">Wi-Fi Sync</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-groups')">Groups</button>
+    </div>
+    
+    <div id="tab-network" class="tab-content active">
+      <div class="bus-label" style="margin-bottom:12px;">Static IP Configuration</div>
+      <div class="auto-fill">
+        <input type="text" id="base-ip" placeholder="Base IP  e.g. 192.168.1" />
+        <button class="btn btn-outline btn-sm" onclick="autoFill()">Auto .101–.112</button>
+        <button class="btn btn-primary btn-sm" id="scan-btn" onclick="scanNetwork()">Scan</button>
+      </div>
+      <div class="ip-grid" id="ip-grid"></div>
+    </div>
+
+    <div id="tab-wifi" class="tab-content">
+      <div class="bus-label" style="margin-bottom:12px;">Venue Wi-Fi Provisioning</div>
+      <p style="font-size:12px; color:var(--text2); margin-bottom:16px;">Push these credentials to all online lamps. They will reboot and attempt to connect.</p>
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <input type="text" id="venue-ssid" placeholder="SSID" style="flex:1; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:10px 14px; color:#fff; font-size:13px; outline:none;">
+        <input type="password" id="venue-pass" placeholder="Password" style="flex:1; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:10px 14px; color:#fff; font-size:13px; outline:none;">
+        <button class="btn btn-primary btn-sm" onclick="pushWifi()">Push All</button>
+      </div>
+      <button class="btn btn-outline btn-sm" style="width:100%; border-style:dashed;" onclick="manageWifi()">Manage Stored Networks</button>
+      <div id="wifi-list" style="display:none; flex-direction:column; gap:6px; margin-top:12px; padding:12px; background:#18181b; border-radius:4px; border:1px solid var(--border);"></div>
+    </div>
+
+    <div id="tab-groups" class="tab-content">
+      <div class="bus-label" style="margin-bottom:12px;">Group Management</div>
+      <p style="font-size:12px; color:var(--text2); margin-bottom:16px;">Add or remove lighting groups. These appear in the Vision Mixer buses.</p>
+      <div style="display:flex; gap:12px; margin-bottom:12px;">
+        <input type="text" id="new-group-name" placeholder="Group Name (e.g. STAGE)" style="flex:1; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:10px 14px; color:#fff; font-size:13px; outline:none;">
+        <button class="btn btn-primary btn-sm" onclick="addGroup()">Add Group</button>
+      </div>
+      <div id="groups-list-settings" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save & Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+const DEFAULT_IPS = Array.from({length:12}, (_,i) => `192.168.1.${101+i}`);
+let lampIPs     = JSON.parse(localStorage.getItem('lampIPs') || JSON.stringify(DEFAULT_IPS));
+let lampGroups  = JSON.parse(localStorage.getItem('lampGroups') || JSON.stringify(Array(12).fill('all')));
+let lampStatus  = Array(12).fill(null);
+let masterFx    = 0;
+let currentGroup= 'all';
+let groups      = JSON.parse(localStorage.getItem('groups') || '["all", "A", "B", "C"]');
+let groupPowerState = {};
+groups.forEach(g => groupPowerState[g] = true);
+let liveMode    = true;
+let pollTimer   = null;
+
+const FX_NAMES = ['Solid','Rainbow','Breathing','Strobe'];
+
+// ── Helpers ────────────────────────────────────────────────
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── HTTP ───────────────────────────────────────────────────
+const pendingCmd = {};
+const nextCmd = {};
+const lastAction = {};
+
+async function sendCmd(ip, params) {
+  const i = lampIPs.indexOf(ip);
+  if (i !== -1) lastAction[i] = Date.now();
+  
+  if (pendingCmd[ip]) {
+    nextCmd[ip] = params;
+    return false;
+  }
+  
+  pendingCmd[ip] = true;
+  const qs = new URLSearchParams(params).toString();
+  try {
+    await fetch(`http://${ip}/cmd?${qs}`, {signal: AbortSignal.timeout(1000)});
+  } catch { }
+  
+  pendingCmd[ip] = false;
+  
+  if (nextCmd[ip]) {
+    const p = nextCmd[ip];
+    nextCmd[ip] = null;
+    sendCmd(ip, p);
+  }
+  return true;
+}
+
+async function getStatus(ip) {
+  try {
+    const res = await fetch(`http://${ip}/status`, {signal: AbortSignal.timeout(2500)});
+    if (res.ok) return await res.json();
+    return null;
+  } catch { return null; }
+}
+
+// ── Poll ───────────────────────────────────────────────────
+async function pollAll() {
+  const results = await Promise.all(lampIPs.map(ip => getStatus(ip)));
+  let onlineCount = 0;
+  results.forEach((status, i) => {
+    if (status) {
+      onlineCount++;
+      if (liveMode || !lampStatus[i]) {
+        // In Live mode or first-time initialization, take hardware values
+        lampStatus[i] = status;
+      } else {
+        // In Blind mode, preserve our local preview tweaks
+        // We only update the online status class/dot indirectly
+      }
+      updateCard(i, lampStatus[i], false);
+    } else {
+      // Lamp is offline
+      lampStatus[i] = null;
+      updateCard(i, null);
+    }
+  });
+  document.getElementById('online-count').innerHTML =
+    `<b>${onlineCount}</b> / 12 online`;
+}
+
+function startPolling() {
+  clearInterval(pollTimer);
+  pollAll();
+  pollTimer = setInterval(pollAll, 4000);
+}
+
+// ── Master Controls ────────────────────────────────────────
+async function sendToTargets(params) {
+  for (let i = 0; i < lampIPs.length; i++) {
+    if (currentGroup === 'all' || lampGroups[i] === currentGroup) {
+      if (!lampStatus[i]) lampStatus[i] = {r: 255, g: 255, b: 255, br: 180, fx: 0, sp: 128, pw: 1, online: true};
+      Object.assign(lampStatus[i], params);
+      updateCard(i, lampStatus[i], true);
+      
+      if (liveMode) {
+        await sendCmd(lampIPs[i], params);
+      }
+    }
+  }
+}
+
+async function applyPreset(hex) {
+  document.getElementById('master-color').value = hex;
+  const {r,g,b} = hexToRgb(hex);
+  sendToTargets({r, g, b});
+}
+
+async function selectFx(fx) {
+  masterFx = fx;
+  document.querySelectorAll('.fx-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.fx) === fx);
+  });
+  sendToTargets({fx});
+}
+
+function toggleLiveMode() {
+  liveMode = !liveMode;
+  const btn = document.getElementById('live-toggle-btn');
+  const takeBtn = document.getElementById('btn-take');
+  if (liveMode) {
+    btn.textContent = 'LIVE';
+    btn.classList.add('active');
+    btn.style.background = '#10b981';
+    takeBtn.style.opacity = '0.5';
+    takeBtn.style.pointerEvents = 'none';
+    takeBtn.textContent = 'TAKE';
+  } else {
+    btn.textContent = 'BLIND';
+    btn.classList.remove('active');
+    btn.style.background = '#27272a';
+    takeBtn.style.opacity = '1';
+    takeBtn.style.pointerEvents = 'auto';
+    takeBtn.textContent = 'GO LIVE (TAKE)';
+  }
+}
+
+function renderBuses() {
+  const targetCont = document.getElementById('target-bus-container');
+  const pwrCont = document.getElementById('quick-pwr-container');
+  
+  targetCont.innerHTML = groups.map(g => `
+    <button class="bus-btn ${currentGroup === g ? 'active' : ''}" data-group="${g}" onclick="selectGroup('${g}')">${g === 'all' ? 'ALL LAMPS' : 'GROUP ' + g}</button>
+  `).join('');
+  
+  pwrCont.innerHTML = groups.map(g => `
+    <button class="quick-pwr-btn ${groupPowerState[g] ? 'active' : ''}" id="pwr-btn-${g}" onclick="toggleQuickPower('${g}')">${g === 'all' ? 'ALL LAMPS' : 'GROUP ' + g}</button>
+  `).join('');
+}
+
+async function syncAll(force = false) {
+  if (!liveMode && !force) return;
+
+  toast(`⚡ Executing GO LIVE Transition...`);
+  
+  const promises = lampIPs.map((ip, i) => {
+    const grp = lampGroups[i];
+    const isTarget = (currentGroup === 'all' || grp === currentGroup);
+    
+    // In LIVE or during TAKE, we push exactly what is in the local status
+    // which includes any individual overrides or master tweaks made in Blind.
+    const s = lampStatus[i];
+    if (!s) return Promise.resolve();
+
+    if (isTarget) {
+      return sendCmd(ip, {r: s.r, g: s.g, b: s.b, br: s.br, fx: s.fx, sp: s.sp, pw: s.pw});
+    }
+    return Promise.resolve();
+  });
+
+  await Promise.all(promises);
+  toast('✅ Synced!');
+  setTimeout(pollAll, 1000);
+}
+
+function allOn() {
+  const targetLamps = lampIPs.filter((ip, i) => currentGroup === 'all' || lampGroups[i] === currentGroup);
+  targetLamps.forEach(ip => sendCmd(ip, {pw:1})); setTimeout(pollAll, 800);
+}
+// Legacy helper removed.
+function assignGroup(i, grp) {
+  lampGroups[i] = grp;
+  localStorage.setItem('lampGroups', JSON.stringify(lampGroups));
+}
+
+function selectGroup(grp) {
+  currentGroup = grp;
+  document.querySelectorAll('.bus-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.group === grp);
+  });
+  
+  const label = grp === 'all' ? 'All' : `Group ${grp}`;
+  document.getElementById('btn-all-on').textContent = `${label} ON`;
+  document.getElementById('btn-all-off').textContent = `${label} OFF`;
+}
+
+function blackout() {
+  const targetLamps = lampIPs.filter((ip, i) => currentGroup === 'all' || lampGroups[i] === currentGroup);
+  if (targetLamps.length === 0) return toast(`⚠ No lamps in Group ${currentGroup}`);
+  toast('🌑 BLACKOUT');
+  
+  if (liveMode) {
+    targetLamps.forEach(ip => sendCmd(ip, {pw:0}));
+    setTimeout(pollAll, 800);
+  } else {
+    // Blind mode: update local status for preview
+    lampIPs.forEach((ip, i) => {
+      if (currentGroup === 'all' || lampGroups[i] === currentGroup) {
+        if (lampStatus[i]) lampStatus[i].pw = 0;
+        updateCard(i, lampStatus[i], true);
+      }
+    });
+  }
+}
+
+function fullOn() {
+  const targetLamps = lampIPs.filter((ip, i) => currentGroup === 'all' || lampGroups[i] === currentGroup);
+  if (targetLamps.length === 0) return toast(`⚠ No lamps in Group ${currentGroup}`);
+  toast('☀️ FULL ON');
+  document.getElementById('master-br').value = 255;
+  document.getElementById('br-val').textContent = '255';
+  
+  if (liveMode) {
+    targetLamps.forEach(ip => sendCmd(ip, {pw:1, br:255}));
+    setTimeout(pollAll, 800);
+  } else {
+    lampIPs.forEach((ip, i) => {
+      if (currentGroup === 'all' || lampGroups[i] === currentGroup) {
+        if (lampStatus[i]) {
+          lampStatus[i].pw = 1;
+          lampStatus[i].br = 255;
+        }
+        updateCard(i, lampStatus[i], true);
+      }
+    });
+  }
+}
+
+function toggleQuickPower(grp) {
+  const isOn = !groupPowerState[grp];
+  groupPowerState[grp] = isOn;
+  
+  if (grp === 'all') {
+    groups.forEach(g => {
+      groupPowerState[g] = isOn;
+      const btn = document.getElementById(`pwr-btn-${g}`);
+      if (btn) btn.classList.toggle('active', isOn);
+    });
+  } else {
+    const btn = document.getElementById(`pwr-btn-${grp}`);
+    if (btn) btn.classList.toggle('active', isOn);
+  }
+  
+  if (liveMode) {
+    const targetLamps = lampIPs.filter((ip, i) => grp === 'all' || lampGroups[i] === grp);
+    if (targetLamps.length > 0) {
+      targetLamps.forEach(ip => sendCmd(ip, {pw: isOn ? 1 : 0}));
+      setTimeout(pollAll, 800);
+    }
+  }
+}
+
+// Legacy applyPreset removed.
+
+// ── Lamp Cards ────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('lamp-grid');
+  grid.innerHTML = Array.from({length:12}, (_,i) => cardHTML(i)).join('');
+}
+
+function cardHTML(i) {
+  const ip = lampIPs[i];
+  return `
+  <div class="lamp-card" id="card-${i}" style="animation-delay: ${i * 0.05}s">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="status-dot" id="dot-${i}"></div>
+        <span>Lamp ${i+1}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="card-ip" id="ip-${i}">${ip}</span>
+          <button class="btn btn-outline btn-sm" onclick="identifyLamp(${i})" style="padding: 2px 6px; font-size:10px;" title="Identify physically">💡</button>
+        </div>
+        <select class="lamp-group-select" onchange="assignGroup(${i}, this.value)">
+          ${groups.map(g => `<option value="${g}" ${lampGroups[i] === g ? 'selected' : ''}>${g === 'all' ? 'No Group' : 'Group ' + g}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="color-swatch" id="swatch-${i}" onclick="document.getElementById('color-input-${i}').click()" style="cursor: pointer;" title="Click to change color"></div>
+    <input type="color" id="color-input-${i}" style="width:0; height:0; opacity:0; position:absolute; pointer-events:none;" oninput="changeLampColor(${i}, this.value)">
+    <div class="card-row">
+      <span class="card-label">Brightness</span>
+      <span class="card-label" id="br-label-${i}">—</span>
+    </div>
+    <input type="range" class="card-br-slider" id="br-slider-${i}"
+           min="10" max="255" value="180"
+           oninput="document.getElementById('br-label-${i}').textContent=this.value; sendCard(${i},{br:+this.value})">
+    <div class="card-row" style="margin-top:4px">
+      <span class="fx-badge" id="fx-badge-${i}">—</span>
+      <button class="power-toggle" id="pwr-${i}" onclick="togglePower(${i})"></button>
+    </div>
+  </div>`;
+}
+
+function updateCard(i, s, force = false) {
+  if (!force && lastAction[i] && Date.now() - lastAction[i] < 2500) return;
+
+  const card    = document.getElementById(`card-${i}`);
+  const dot     = document.getElementById(`dot-${i}`);
+  const swatch  = document.getElementById(`swatch-${i}`);
+  const brLabel = document.getElementById(`br-label-${i}`);
+  const brSlider= document.getElementById(`br-slider-${i}`);
+  const fxBadge = document.getElementById(`fx-badge-${i}`);
+  const pwr     = document.getElementById(`pwr-${i}`);
+
+  if (!card) return;
+
+  if (!s) {
+    card.className = 'lamp-card offline';
+    dot.className  = 'status-dot';
+    swatch.style.background = '#2a2a3a';
+    brLabel.textContent = '—';
+    fxBadge.textContent = 'Offline';
+    pwr.className = 'power-toggle';
+    return;
+  }
+
+  card.className = 'lamp-card online';
+  dot.className  = 'status-dot online';
+  swatch.style.background = s.pw ? `rgb(${s.r},${s.g},${s.b})` : '#1a1a2a';
+  
+  const colorInput = document.getElementById(`color-input-${i}`);
+  if (colorInput) colorInput.value = rgbToHex(s.r, s.g, s.b);
+
+  brLabel.textContent = s.br;
+  brSlider.value = s.br;
+  fxBadge.textContent = FX_NAMES[s.fx] || 'Solid';
+  pwr.className = 'power-toggle' + (s.pw ? ' on' : '');
+}
+
+async function sendCard(i, params) {
+  if (!liveMode) {
+    if (lampStatus[i]) {
+      Object.assign(lampStatus[i], params);
+      updateCard(i, lampStatus[i], true);
+    }
+    return;
+  }
+  await sendCmd(lampIPs[i], params);
+}
+
+function changeLampColor(i, hex) {
+  const {r, g, b} = hexToRgb(hex);
+  sendCard(i, {r, g, b});
+  
+  const swatch = document.getElementById(`swatch-${i}`);
+  if (swatch) swatch.style.background = `rgb(${r},${g},${b})`;
+  
+  if (lampStatus[i]) {
+    lampStatus[i].r = r;
+    lampStatus[i].g = g;
+    lampStatus[i].b = b;
+  }
+}
+
+function togglePower(i) {
+  const s = lampStatus[i];
+  if (!s) return;
+  const newPwr = s.pw ? 0 : 1;
+  s.pw = newPwr;
+  updateCard(i, s, true);
+  
+  sendCard(i, {pw: newPwr});
+  if (liveMode) {
+    setTimeout(() => getStatus(lampIPs[i]).then(st => {
+      if (st) {
+        lampStatus[i] = st; 
+        updateCard(i, st, true);
+      }
+    }), 600);
+  }
+}
+
+async function identifyLamp(i) {
+  const ip = lampIPs[i];
+  if (!ip || ip.includes('x')) return toast('⚠ Invalid IP');
+  toast('💡 Identifying Lamp ' + (i+1));
+  await fetch(`http://${ip}/identify`, {signal: AbortSignal.timeout(2500)}).catch(()=>{});
+}
+
+// ── Settings ───────────────────────────────────────────────
+function switchTab(e, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function openSettings() {
+  const grid = document.getElementById('ip-grid');
+  grid.innerHTML = Array.from({length:12}, (_,i) => `
+    <div class="ip-row">
+      <label>Lamp ${i+1}</label>
+      <input type="text" id="ip-input-${i}" value="${lampIPs[i]}" placeholder="192.168.x.x">
+    </div>`).join('');
+  renderGroupsSettings();
+  
+  // Default to first tab
+  const firstTab = document.querySelector('.tab-btn');
+  if (firstTab) firstTab.click();
+  
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function renderGroupsSettings() {
+  const container = document.getElementById('groups-list-settings');
+  container.innerHTML = groups.map(g => `
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#18181b; padding:8px 12px; border-radius:4px; border:1px solid var(--border);">
+      <span style="font-size:11px; font-weight:700; color:var(--text2); letter-spacing:0.5px;">${g === 'all' ? 'MASTER ALL' : 'GROUP ' + g}</span>
+      ${g === 'all' ? '' : `<button class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444; padding:4px 10px; font-size:10px;" onclick="removeGroup('${g}')">DELETE</button>`}
+    </div>
+  `).join('');
+}
+
+function addGroup() {
+  const name = document.getElementById('new-group-name').value.trim().toUpperCase();
+  if (!name) return toast('⚠ Enter group name');
+  if (groups.includes(name)) return toast('⚠ Group exists');
+  groups.push(name);
+  groupPowerState[name] = true;
+  localStorage.setItem('groups', JSON.stringify(groups));
+  renderGroupsSettings();
+  renderBuses();
+  renderGrid();
+  document.getElementById('new-group-name').value = '';
+  toast(`✅ Added Group ${name}`);
+}
+
+function removeGroup(name) {
+  if (name === 'all') return;
+  if (!confirm(`Delete Group ${name}? Lamps will revert to "No Group".`)) return;
+  groups = groups.filter(g => g !== name);
+  lampGroups = lampGroups.map(g => g === name ? 'all' : g);
+  localStorage.setItem('groups', JSON.stringify(groups));
+  localStorage.setItem('lampGroups', JSON.stringify(lampGroups));
+  renderGroupsSettings();
+  renderBuses();
+  renderGrid();
+  toast(`🗑 Deleted Group ${name}`);
+}
+
+async function pushWifi() {
+  const ssid = document.getElementById('venue-ssid').value.trim();
+  const pass = document.getElementById('venue-pass').value.trim();
+  if (!ssid) return toast('⚠ Please enter an SSID');
+  
+  toast('📡 Pushing Wi-Fi to all online lamps...');
+  let successCount = 0;
+  
+  const promises = lampIPs.map(async (ip, i) => {
+    if (!lampStatus[i]) return; // skip offline lamps
+    try {
+      const res = await fetch(`http://${ip}/setwifi?ssid=${encodeURIComponent(ssid)}&pass=${encodeURIComponent(pass)}`, {signal: AbortSignal.timeout(2000)});
+      if (res.ok) successCount++;
+    } catch(e) {}
+  });
+  
+  await Promise.all(promises);
+  toast(`🏁 Pushed to ${successCount} lamps! They will reboot to apply.`);
+}
+
+async function manageWifi() {
+  const onlineLamps = lampIPs.filter((ip, i) => lampStatus[i]);
+  if (onlineLamps.length === 0) return toast('⚠ No lamps online to query');
+  
+  const listEl = document.getElementById('wifi-list');
+  listEl.style.display = 'flex';
+  listEl.innerHTML = '<span style="font-size:12px; color:var(--text2);">Loading...</span>';
+  
+  try {
+    const res = await fetch(`http://${onlineLamps[0]}/getwifi`, {signal: AbortSignal.timeout(2000)});
+    if (res.ok) {
+      const networks = await res.json();
+      if (networks.length === 0) {
+        listEl.innerHTML = '<span style="font-size:12px; color:var(--text2);">No custom networks saved.</span>';
+        return;
+      }
+      listEl.innerHTML = networks.map(n => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#27272a; padding:8px 12px; border-radius:4px; border:1px solid var(--border);">
+          <span style="font-size:12px; font-weight:700; color:var(--text);">${n.ssid.toUpperCase()}</span>
+          <button class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444; padding:4px 10px; font-size:10px;" onclick="clearWifiSlot(${n.index}, '${n.ssid}')">DELETE</button>
+        </div>
+      `).join('');
+    } else {
+      listEl.innerHTML = '<span style="font-size:12px; color:#ef4444;">Failed to load.</span>';
+    }
+  } catch(e) {
+    listEl.innerHTML = '<span style="font-size:12px; color:#ef4444;">Error connecting to lamp.</span>';
+  }
+}
+
+async function clearWifiSlot(idx, ssid) {
+  if (!confirm(`Delete network "${ssid}" from all lamps? They will reboot.`)) return;
+  
+  toast(`🗑 Deleting "${ssid}" from lamps...`);
+  let successCount = 0;
+  
+  const promises = lampIPs.map(async (ip, i) => {
+    if (!lampStatus[i]) return;
+    try {
+      const res = await fetch(`http://${ip}/clearwifi?index=${idx}`, {signal: AbortSignal.timeout(2000)});
+      if (res.ok) successCount++;
+    } catch(e) {}
+  });
+  
+  await Promise.all(promises);
+  toast(`🏁 Deleted from ${successCount} lamps!`);
+  manageWifi(); // Refresh list
+}
+
+function autoFill() {
+  const base = document.getElementById('base-ip').value.trim();
+  if (!base) { toast('⚠ Enter a base IP first'); return; }
+  Array.from({length:12}, (_,i) => {
+    const el = document.getElementById(`ip-input-${i}`);
+    if (el) el.value = `${base}.${101+i}`;
+  });
+}
+
+async function scanNetwork() {
+  const base = document.getElementById('base-ip').value.trim();
+  if (!base) { toast('⚠ Enter a base IP first'); return; }
+  
+  const scanBtn = document.getElementById('scan-btn');
+  scanBtn.textContent = 'Scanning...';
+  scanBtn.disabled = true;
+  toast('🔍 Scanning network for lamps...');
+  
+  const promises = [];
+  for (let i = 1; i <= 254; i++) {
+    const ip = `${base}.${i}`;
+    promises.push((async () => {
+      try {
+        const res = await fetch(`http://${ip}/status`, {signal: AbortSignal.timeout(1500)});
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.id >= 1 && data.id <= 12) {
+            const idx = data.id - 1;
+            const el = document.getElementById(`ip-input-${idx}`);
+            if (el) {
+                el.value = ip;
+                el.style.borderColor = 'var(--online)';
+            }
+            toast(`✅ Found Lamp ${data.id} at ${ip}`);
+            fetch(`http://${ip}/identify`, {signal: AbortSignal.timeout(2500)}).catch(()=>{});
+          }
+        }
+      } catch (e) { /* timeout/error */ }
+    })());
+  }
+  
+  await Promise.all(promises);
+  scanBtn.textContent = 'Scan Network';
+  scanBtn.disabled = false;
+  toast('🏁 Scan complete!');
+}
+
+function saveSettings() {
+  lampIPs = Array.from({length:12}, (_,i) => {
+    const el = document.getElementById(`ip-input-${i}`);
+    return el ? el.value.trim() : lampIPs[i];
+  });
+  localStorage.setItem('lampIPs', JSON.stringify(lampIPs));
+  // update ip labels on cards
+  for (let i=0;i<12;i++) {
+    const el = document.getElementById(`ip-${i}`);
+    if (el) el.textContent = lampIPs[i];
+  }
+  closeSettings();
+  toast('✅ IPs saved!');
+  startPolling();
+}
+
+// Close modal on overlay click
+document.getElementById('settings-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
+// ── Init ───────────────────────────────────────────────────
+renderBuses();
+renderGrid();
+startPolling();
+</script>
+</body>
+</html>
