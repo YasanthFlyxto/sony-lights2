@@ -400,6 +400,94 @@
     .quick-pwr-btn.active {
       background: #10b981; color: #fff; border-color: #34d399;
     }
+
+    /* ── Pro Timeline Styles ── */
+    #timeline-view {
+      animation: fadeIn 0.3s ease-out;
+    }
+    .tl-track {
+      display: flex; height: 40px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .tl-track-label {
+      width: 100px; background: #121212; color: var(--text2);
+      font-size: 10px; font-weight: 700; display: flex; align-items: center;
+      padding-left: 12px; border-right: 1px solid var(--border);
+      position: sticky; left: 0; z-index: 2;
+    }
+    .tl-track-content {
+      flex: 1; position: relative; height: 100%;
+    }
+    .tl-clip {
+      position: absolute; top: 4px; height: 32px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.2); cursor: move;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; font-weight: 800; color: #fff; overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .tl-clip:hover { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+    .tl-clip.selected { border-color: var(--accent2); border-width: 2px; box-shadow: 0 0 20px var(--accent2); z-index: 10; }
+    .tl-clip.dragging { opacity: 0.7; z-index: 100; transform: scale(1.02); }
+    
+    .tl-handle {
+      position: absolute; top: 0; width: 6px; height: 100%;
+      cursor: col-resize; background: rgba(255,255,255,0.1); opacity: 0;
+    }
+    .tl-clip:hover .tl-handle { opacity: 1; }
+    .tl-handle-l { left: 0; }
+    .tl-handle-r { right: 0; }
+    .tl-handle:hover { background: #fff; }
+
+    /* ── Context Menu ── */
+    .ctx-menu {
+      position: fixed; background: #1c1c1e; border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px; z-index: 1000; display: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 160px;
+    }
+    .ctx-item {
+      padding: 8px 12px; font-size: 11px; color: #ddd; border-radius: 4px;
+      cursor: pointer; display: flex; align-items: center; gap: 10px;
+    }
+    .ctx-item:hover { background: var(--accent); color: #fff; }
+    .ctx-item.delete:hover { background: #ef4444; }
+    .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+    .tl-tick {
+      position: absolute; height: 100%; border-left: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .tl-tick-label {
+      position: absolute; font-size: 9px; color: #555; top: 8px; left: 4px;
+    }
+
+    /* ── Floating Palette ── */
+    .floating-palette {
+      position: fixed; bottom: 30px; right: 30px;
+      background: #1c1c1e; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; z-index: 100;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column; gap: 10px;
+      animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } }
+    
+    .palette-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    }
+    .palette-color {
+      width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1); transition: transform 0.1s;
+    }
+    .palette-color:hover { transform: scale(1.15); border-color: #fff; }
+    .palette-color.active { outline: 2px solid var(--accent); outline-offset: 2px; }
+    
+    .current-color-box {
+      height: 40px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--accent); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; font-size: 10px;
+      font-weight: 800; color: #fff; text-transform: uppercase;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
@@ -410,15 +498,24 @@
     <img src="logo.png" alt="Logo" style="width:32px; height:32px; border-radius:50%; margin-right:12px;">
     <h1>Flyxto <span>Light House</span></h1>
   </div>
-  <span id="online-count"><b>0</b> / 12 online</span>
-  <button class="btn btn-outline" onclick="openSettings()">⚙ Settings</button>
+  <div style="display:flex; align-items:center; gap:20px;">
+    <div class="fx-buttons" style="background:#121212; padding:4px; border-radius:8px; border:1px solid var(--border);">
+       <button id="view-mixer" class="fx-btn active" onclick="switchView('mixer')">Mixer</button>
+       <button id="view-timeline" class="fx-btn" onclick="switchView('timeline')">Timeline</button>
+    </div>
+    <div id="sys-clock" style="font-family:'Roboto Mono', monospace; font-size:14px; font-weight:700; color:var(--accent2);">00:00:00</div>
+    <span id="online-count"><b>0</b> / 12 online</span>
+    <button class="btn btn-outline" onclick="openSettings()">⚙ Settings</button>
+  </div>
 </header>
 
 <!-- Main -->
 <main>
-
-  <!-- Vision Mixer Control -->
-  <div class="mixer-card">
+  
+  <!-- Vision Mixer Container -->
+  <div id="mixer-container">
+    <!-- Vision Mixer Control -->
+    <div class="mixer-card">
     <div class="mixer-bus target-bus">
       <div class="bus-label">TARGET BUS</div>
       <div class="bus-buttons" id="target-bus-container">
@@ -494,7 +591,78 @@
     </div>
   </div>
 
-  <div class="lamp-grid" id="lamp-grid"></div>
+    <div class="lamp-grid" id="lamp-grid"></div>
+  </div>
+
+  <!-- Pro Timeline View -->
+  <div id="timeline-view" style="display:none; margin-top:0;">
+    <div class="mixer-card" style="padding:0; overflow:hidden; height: calc(100vh - 100px); border:none; background:transparent;">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#18181b;">
+        <div style="display:flex; align-items:center; gap:16px;">
+           <button class="btn btn-primary" id="tl-play-btn" onclick="toggleTimelinePlayback()" style="width:100px;">▶ PLAY</button>
+           <button class="btn btn-outline" onclick="stopTimeline()">⏹ STOP</button>
+           <div style="width:1px; height:24px; background:var(--border);"></div>
+           <div class="bus-label">Time: <span id="tl-time-display" style="color:#fff;">0.00s</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+           <span class="bus-label">Zoom</span>
+           <input type="range" id="tl-zoom" min="50" max="400" value="100" style="width:100px;" oninput="updateTimelineZoom()">
+           <button class="btn btn-outline btn-sm" onclick="clearTimeline()">Clear All</button>
+        </div>
+      </div>
+      
+      <div id="timeline-scroll-container" style="height: calc(100% - 65px); overflow:auto; position:relative; background:#0a0a0a;">
+        <div id="timeline-ruler" style="height:35px; border-bottom:1px solid #333; position:sticky; top:0; z-index:10; background:#0a0a0a; pointer-events:none;"></div>
+        <div id="timeline-tracks-container" style="position:relative;">
+          <!-- 12 Tracks -->
+          <div id="tracks-wrapper"></div>
+          <!-- Playhead -->
+          <div id="tl-playhead" style="position:absolute; top:0; left:0; width:2px; height:100%; background:var(--accent2); z-index:5; pointer-events:none; box-shadow:0 0 10px var(--accent2);">
+             <div style="position:absolute; top:-10px; left:-5px; width:12px; height:12px; background:var(--accent2); border-radius:50%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="floating-palette" class="floating-palette">
+      <div class="bus-label">Palette</div>
+      <div class="palette-grid">
+        <div class="palette-color" style="background:#ff0000" onclick="setMasterColor('#ff0000')"></div>
+        <div class="palette-color" style="background:#ff8800" onclick="setMasterColor('#ff8800')"></div>
+        <div class="palette-color" style="background:#ffff00" onclick="setMasterColor('#ffff00')"></div>
+        <div class="palette-color" style="background:#00ff00" onclick="setMasterColor('#00ff00')"></div>
+        <div class="palette-color" style="background:#00ffff" onclick="setMasterColor('#00ffff')"></div>
+        <div class="palette-color" style="background:#0044ff" onclick="setMasterColor('#0044ff')"></div>
+        <div class="palette-color" style="background:#aa00ff" onclick="setMasterColor('#aa00ff')"></div>
+        <div class="palette-color" style="background:#ff00ff" onclick="setMasterColor('#ff00ff')"></div>
+        <div class="palette-color" style="background:#ffffff" onclick="setMasterColor('#ffffff')"></div>
+        <div class="palette-color" style="background:#333333" onclick="setMasterColor('#333333')"></div>
+      </div>
+      <div id="tl-current-color" class="current-color-box" onclick="document.getElementById('tl-color-picker').click()">
+        Custom
+        <input type="color" id="tl-color-picker" style="opacity:0; width:0; height:0; position:absolute;" oninput="setMasterColor(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <div id="tl-ctx-menu" class="ctx-menu" style="width: 200px;">
+    <div style="padding: 8px 12px; font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px;">Change Color</div>
+    <div class="palette-grid" style="padding: 0 12px 8px 12px; grid-template-columns: repeat(5, 1fr);">
+      <div class="palette-color" style="background:#ff0000" onclick="updateClipColor('#ff0000')"></div>
+      <div class="palette-color" style="background:#ff8800" onclick="updateClipColor('#ff8800')"></div>
+      <div class="palette-color" style="background:#ffff00" onclick="updateClipColor('#ffff00')"></div>
+      <div class="palette-color" style="background:#00ff00" onclick="updateClipColor('#00ff00')"></div>
+      <div class="palette-color" style="background:#00ffff" onclick="updateClipColor('#00ffff')"></div>
+      <div class="palette-color" style="background:#0044ff" onclick="updateClipColor('#0044ff')"></div>
+      <div class="palette-color" style="background:#aa00ff" onclick="updateClipColor('#aa00ff')"></div>
+      <div class="palette-color" style="background:#ff00ff" onclick="updateClipColor('#ff00ff')"></div>
+      <div class="palette-color" style="background:#ffffff" onclick="updateClipColor('#ffffff')"></div>
+      <div class="palette-color" style="background:#333333" onclick="updateClipColor('#333333')"></div>
+    </div>
+    <div class="ctx-item" id="ctx-color-opt">🌈 Custom Color... <input type="color" id="ctx-color-input" style="opacity:0; width:0; height:0; position:absolute;"></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="duplicateClip()">📋 Duplicate</div>
+    <div class="ctx-item delete" onclick="deleteClipFromCtx()">🗑 Delete</div>
+  </div>
 
 </main>
 
@@ -513,6 +681,7 @@
       <button class="tab-btn active" onclick="switchTab(event, 'tab-network')">Network</button>
       <button class="tab-btn" onclick="switchTab(event, 'tab-wifi')">Wi-Fi Sync</button>
       <button class="tab-btn" onclick="switchTab(event, 'tab-groups')">Groups</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-automation')" style="color:var(--online)">⚡ Cues & Timers</button>
     </div>
     
     <div id="tab-network" class="tab-content active">
@@ -547,6 +716,49 @@
       <div id="groups-list-settings" style="display:flex; flex-direction:column; gap:6px;"></div>
     </div>
 
+    <div id="tab-automation" class="tab-content">
+      <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:24px;">
+        <!-- Cues Section -->
+        <div>
+          <div class="bus-label" style="margin-bottom:12px;">Saved Cues</div>
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <input type="text" id="cue-name" placeholder="Cue Name (e.g. GRAND OPENING)" style="flex:1; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:10px 14px; color:#fff; font-size:13px; outline:none;">
+            <button class="btn btn-primary btn-sm" onclick="saveCue()">Save Current</button>
+          </div>
+          <div id="cues-list" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+            <!-- Dynamic -->
+          </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div>
+          <div class="bus-label" style="margin-bottom:12px;">Timeline Sequence</div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; padding:12px; background:rgba(0,0,0,0.2); border-radius:4px; border:1px solid var(--border);">
+            <div style="display:flex; gap:8px; align-items:center;">
+               <select id="step-cue" style="flex:2; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:8px; color:#fff; font-size:12px;">
+                 <option value="">Select Cue...</option>
+               </select>
+               <input type="number" id="step-duration" value="5" min="1" style="width:70px; background:#18181b; border:1px solid var(--border); border-radius:4px; padding:8px; color:#fff;" title="Duration in seconds">
+               <span style="font-size:10px; color:var(--text2);">sec</span>
+               <button class="btn btn-primary btn-sm" onclick="addTimelineStep()">Add Step</button>
+            </div>
+          </div>
+          
+          <div style="display:flex; gap:12px; margin-bottom:12px; padding:10px; background:#121212; border-radius:4px; border:1px solid var(--border);">
+             <button id="btn-play-seq" class="btn btn-primary" onclick="togglePlayback()" style="flex:1;">▶ PLAY</button>
+             <button class="btn btn-outline" onclick="stopPlayback()" style="flex:0.5;">⏹ STOP</button>
+             <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer;">
+               <input type="checkbox" id="seq-loop"> LOOP
+             </label>
+          </div>
+
+          <div id="timeline-list" style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+            <!-- Dynamic -->
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeSettings()">Cancel</button>
       <button class="btn btn-primary" onclick="saveSettings()">Save & Close</button>
@@ -570,6 +782,540 @@ let groupPowerState = {};
 groups.forEach(g => groupPowerState[g] = true);
 let liveMode    = true;
 let pollTimer   = null;
+
+// ── Socket Manager ──────────────────────────────────────────
+class SocketManager {
+  constructor() {
+    this.sockets = {}; // IP -> WebSocket
+    this.reconnectTimers = {};
+  }
+
+  connect(ip) {
+    if (this.sockets[ip] && (this.sockets[ip].readyState === WebSocket.OPEN || this.sockets[ip].readyState === WebSocket.CONNECTING)) return;
+    
+    const i = lampIPs.indexOf(ip);
+    console.log(`[WS] Connecting to ${ip}...`);
+    
+    try {
+      const ws = new WebSocket(`ws://${ip}:81`);
+      this.sockets[ip] = ws;
+
+      ws.onopen = () => {
+        console.log(`[WS] Connected to ${ip}`);
+        if (this.reconnectTimers[ip]) {
+          clearTimeout(this.reconnectTimers[ip]);
+          delete this.reconnectTimers[ip];
+        }
+        // Small delay then request status (the lamp usually pushes on connect anyway)
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const status = JSON.parse(event.data);
+          if (status && typeof status.id === 'number') {
+            const idx = status.id - 1;
+            // Update local state from push
+            if (liveMode || !lampStatus[idx]) {
+              lampStatus[idx] = status;
+            }
+            updateCard(idx, status, false);
+            
+            // Update online count UI
+            updateOnlineUI();
+            
+            // Update connection mode indicator
+            const modeEl = document.getElementById(`mode-${idx}`);
+            if (modeEl) {
+              modeEl.textContent = '⚡ WS';
+              modeEl.style.color = 'var(--online)';
+            }
+          }
+        } catch (e) {
+          console.error(`[WS] Error parsing message from ${ip}:`, e);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log(`[WS] Disconnected from ${ip}`);
+        delete this.sockets[ip];
+        const i = lampIPs.indexOf(ip);
+        if (i !== -1) {
+          const modeEl = document.getElementById(`mode-${i}`);
+          if (modeEl) {
+            modeEl.textContent = '🌐 HTTP';
+            modeEl.style.color = 'var(--text2)';
+          }
+        }
+        // Only reconnect if the IP is still in our list
+        if (lampIPs.includes(ip)) {
+          this.reconnectTimers[ip] = setTimeout(() => this.connect(ip), 5000);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error(`[WS] Socket error on ${ip}`);
+        ws.close();
+      };
+    } catch (e) {
+      console.error(`[WS] Failed to create socket for ${ip}:`, e);
+    }
+  }
+
+  send(ip, data) {
+    const ws = this.sockets[ip];
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      // Format as key:value string for our simple firmware parser
+      const str = Object.entries(data).map(([k,v]) => `${k}:${v}`).join(',');
+      ws.send(str);
+      return true;
+    }
+    return false;
+  }
+
+  connectAll() {
+    lampIPs.forEach(ip => {
+      if (ip && !ip.includes('x')) this.connect(ip);
+    });
+  }
+  
+  disconnectAll() {
+    Object.values(this.sockets).forEach(ws => ws.close());
+    Object.values(this.reconnectTimers).forEach(t => clearTimeout(t));
+    this.sockets = {};
+    this.reconnectTimers = {};
+  }
+}
+
+const sockets = new SocketManager();
+
+function updateOnlineUI() {
+  let onlineCount = 0;
+  lampStatus.forEach(s => { if (s) onlineCount++; });
+  document.getElementById('online-count').innerHTML =
+    `<b>${onlineCount}</b> / 12 online`;
+}
+
+// ── Pro Timeline Engine ──────────────────────────────────
+let timelineData = JSON.parse(localStorage.getItem('proTimeline') || '[]');
+if (timelineData.length === 0) {
+  timelineData = Array.from({length:12}, () => []);
+}
+
+let tlPlayTime = 0; // In seconds
+let tlPlaying = false;
+let tlZoom = 100; // Pixels per second
+let tlLastUpdate = 0;
+let tlPrevStates = Array(12).fill(null);
+
+function switchView(view) {
+  const isTimeline = view === 'timeline';
+  document.getElementById('mixer-container').style.display = isTimeline ? 'none' : 'block';
+  document.getElementById('timeline-view').style.display = isTimeline ? 'block' : 'none';
+  document.querySelectorAll('.fx-btn').forEach(b => b.classList.toggle('active', b.id === `view-${view}`));
+  
+  if (isTimeline) {
+    renderProTimeline();
+    // Match palette color to master
+    const color = document.getElementById('master-color').value;
+    document.getElementById('tl-current-color').style.background = color;
+  }
+}
+
+function setMasterColor(hex) {
+  document.getElementById('master-color').value = hex;
+  const box = document.getElementById('tl-current-color');
+  if (box) box.style.background = hex;
+  
+  // Highlight active palette color
+  document.querySelectorAll('.palette-color').forEach(c => {
+    c.classList.toggle('active', c.style.backgroundColor === hex);
+  });
+}
+
+function renderProTimeline() {
+  const container = document.getElementById('tracks-wrapper');
+  container.innerHTML = Array.from({length:12}, (_, i) => `
+    <div class="tl-track">
+      <div class="tl-track-label">LAMP ${i+1}</div>
+      <div class="tl-track-content" id="track-${i}" onclick="tlTrackClick(event, ${i})">
+        ${renderTrackClips(i)}
+      </div>
+    </div>
+  `).join('');
+  
+  renderRuler();
+  updatePlayheadPosition();
+}
+
+function renderTrackClips(lampIdx) {
+  return timelineData[lampIdx].map((clip, clipIdx) => {
+    const isSelected = selectedClip && selectedClip.lampIdx === lampIdx && selectedClip.clipIdx === clipIdx;
+    return `
+      <div class="tl-clip ${isSelected ? 'selected' : ''}" 
+           id="clip-${lampIdx}-${clipIdx}"
+           style="left: ${clip.start * tlZoom}px; width: ${clip.duration * tlZoom}px; background: ${clip.color};"
+           onmousedown="tlClipMouseDown(event, ${lampIdx}, ${clipIdx})"
+           oncontextmenu="tlShowCtx(event, ${lampIdx}, ${clipIdx})">
+         <div class="tl-handle tl-handle-l" onmousedown="tlHandleMouseDown(event, ${lampIdx}, ${clipIdx}, 'l')"></div>
+         <div class="tl-handle tl-handle-r" onmousedown="tlHandleMouseDown(event, ${lampIdx}, ${clipIdx}, 'r')"></div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Selection & Keyboard System ───────────────────────────
+let selectedClip = null;
+
+window.addEventListener('keydown', (e) => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedClip) {
+    // Don't delete if we are typing in an input
+    if (document.activeElement.tagName === 'INPUT') return;
+    
+    timelineData[selectedClip.lampIdx].splice(selectedClip.clipIdx, 1);
+    selectedClip = null;
+    saveTimeline();
+    renderProTimeline();
+  }
+});
+
+// ── Drag & Resize System ──────────────────────────────────
+let dragInfo = null;
+
+function tlClipMouseDown(e, lampIdx, clipIdx) {
+  if (e.button !== 0 || e.target.classList.contains('tl-handle')) return;
+  e.stopPropagation();
+  
+  selectedClip = {lampIdx, clipIdx};
+  
+  const clip = timelineData[lampIdx][clipIdx];
+  dragInfo = {
+    type: 'move',
+    lampIdx,
+    clipIdx,
+    initialX: e.clientX,
+    initialY: e.clientY,
+    initialStart: clip.start,
+    initialLamp: lampIdx
+  };
+  
+  document.getElementById(`clip-${lampIdx}-${clipIdx}`).classList.add('dragging');
+}
+
+function tlHandleMouseDown(e, lampIdx, clipIdx, edge) {
+  if (e.button !== 0) return;
+  e.stopPropagation();
+  
+  const clip = timelineData[lampIdx][clipIdx];
+  dragInfo = {
+    type: edge === 'l' ? 'resize-l' : 'resize-r',
+    lampIdx,
+    clipIdx,
+    initialX: e.clientX,
+    initialStart: clip.start,
+    initialDuration: clip.duration
+  };
+}
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragInfo) return;
+  
+  const dx = (e.clientX - dragInfo.initialX) / tlZoom;
+  const snap = 0.1; // 0.1s snapping
+  
+  const clip = timelineData[dragInfo.lampIdx][dragInfo.clipIdx];
+  
+  if (dragInfo.type === 'move') {
+    clip.start = Math.max(0, Math.round((dragInfo.initialStart + dx) / snap) * snap);
+    
+    // Vertical dragging (change track)
+    const dy = e.clientY - dragInfo.initialY;
+    const trackDiff = Math.round(dy / 40);
+    const newLampIdx = Math.max(0, Math.min(11, dragInfo.initialLamp + trackDiff));
+    
+    if (newLampIdx !== dragInfo.lampIdx) {
+      // Move clip to another track
+      timelineData[newLampIdx].push(timelineData[dragInfo.lampIdx].splice(dragInfo.clipIdx, 1)[0]);
+      dragInfo.lampIdx = newLampIdx;
+      dragInfo.clipIdx = timelineData[newLampIdx].length - 1;
+    }
+  } else if (dragInfo.type === 'resize-r') {
+    clip.duration = Math.max(0.1, Math.round((dragInfo.initialDuration + dx) / snap) * snap);
+  } else if (dragInfo.type === 'resize-l') {
+    const newStart = Math.max(0, Math.round((dragInfo.initialStart + dx) / snap) * snap);
+    const diff = clip.start - newStart;
+    clip.start = newStart;
+    clip.duration = Math.max(0.1, clip.duration + diff);
+  }
+  
+  renderProTimeline();
+});
+
+window.addEventListener('mouseup', () => {
+  if (dragInfo) {
+    saveTimeline();
+    dragInfo = null;
+    renderProTimeline();
+  }
+  hideCtx();
+});
+
+// ── Context Menu System ───────────────────────────────────
+let ctxClip = null;
+
+function tlShowCtx(e, lampIdx, clipIdx) {
+  e.preventDefault();
+  ctxClip = {lampIdx, clipIdx};
+  const menu = document.getElementById('tl-ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+}
+
+function hideCtx() {
+  document.getElementById('tl-ctx-menu').style.display = 'none';
+}
+
+document.getElementById('ctx-color-opt').onclick = (e) => {
+  if (e.target.id === 'ctx-color-input') return;
+  document.getElementById('ctx-color-input').click();
+};
+
+document.getElementById('ctx-color-input').oninput = (e) => {
+  updateClipColor(e.target.value);
+};
+
+function updateClipColor(color) {
+  if (!ctxClip) return;
+  const clip = timelineData[ctxClip.lampIdx][ctxClip.clipIdx];
+  const {r,g,b} = hexToRgb(color);
+  clip.color = color;
+  clip.r = r; clip.g = g; clip.b = b;
+  saveTimeline();
+  renderProTimeline();
+  hideCtx();
+}
+
+function deleteClipFromCtx() {
+  if (!ctxClip) return;
+  timelineData[ctxClip.lampIdx].splice(ctxClip.clipIdx, 1);
+  saveTimeline();
+  renderProTimeline();
+  hideCtx();
+}
+
+function duplicateClip() {
+  if (!ctxClip) return;
+  const clip = timelineData[ctxClip.lampIdx][ctxClip.clipIdx];
+  timelineData[ctxClip.lampIdx].push({...clip, start: clip.start + clip.duration});
+  saveTimeline();
+  renderProTimeline();
+  hideCtx();
+}
+
+function renderRuler() {
+  const ruler = document.getElementById('timeline-ruler');
+  const width = 3600 * tlZoom; // 1 hour max
+  ruler.style.width = width + 'px';
+  document.getElementById('tracks-wrapper').style.width = width + 'px';
+  
+  let html = '';
+  for (let s = 0; s < 300; s += 5) { // Show 5 mins worth of ticks
+    html += `<div class="tl-tick" style="left: ${s * tlZoom}px">
+      <span class="tl-tick-label">${s}s</span>
+    </div>`;
+  }
+  ruler.innerHTML = html;
+}
+
+function tlTrackClick(e, lampIdx) {
+  if (e.button !== 0) return;
+  
+  // If context menu is open, just close it and don't create a frame
+  const menu = document.getElementById('tl-ctx-menu');
+  if (menu.style.display === 'block') {
+    hideCtx();
+    return;
+  }
+  
+  selectedClip = null; // Deselect when clicking empty space
+  
+  const rect = e.currentTarget.getBoundingClientRect();
+  const start = (e.clientX - rect.left + document.getElementById('timeline-scroll-container').scrollLeft) / tlZoom;
+  
+  // Create a block of the current master color
+  const color = document.getElementById('master-color').value;
+  const {r,g,b} = hexToRgb(color);
+  const duration = 2.0; // Default 2s block
+  
+  timelineData[lampIdx].push({
+    start, duration, color, r, g, b, 
+    br: parseInt(document.getElementById('master-br').value),
+    fx: masterFx,
+    sp: parseInt(document.getElementById('master-sp').value)
+  });
+  
+  saveTimeline();
+  renderProTimeline();
+}
+
+function removeClip(e, lampIdx, clipIdx) {
+  e.preventDefault();
+  timelineData[lampIdx].splice(clipIdx, 1);
+  saveTimeline();
+  renderProTimeline();
+}
+
+function saveTimeline() {
+  localStorage.setItem('proTimeline', JSON.stringify(timelineData));
+}
+
+function updateTimelineZoom() {
+  tlZoom = parseInt(document.getElementById('tl-zoom').value);
+  renderProTimeline();
+}
+
+function toggleTimelinePlayback() {
+  tlPlaying = !tlPlaying;
+  const btn = document.getElementById('tl-play-btn');
+  btn.textContent = tlPlaying ? '⏸ PAUSE' : '▶ PLAY';
+  btn.style.background = tlPlaying ? '#eab308' : 'var(--accent)';
+  
+  if (tlPlaying) {
+    tlLastUpdate = performance.now();
+    requestAnimationFrame(timelineLoop);
+  }
+}
+
+function stopTimeline() {
+  tlPlaying = false;
+  tlPlayTime = 0;
+  tlPrevStates = Array(12).fill(null);
+  document.getElementById('tl-play-btn').textContent = '▶ PLAY';
+  document.getElementById('tl-play-btn').style.background = 'var(--accent)';
+  updatePlayheadPosition();
+}
+
+function timelineLoop(now) {
+  if (!tlPlaying) return;
+  
+  const delta = (now - tlLastUpdate) / 1000;
+  tlLastUpdate = now;
+  tlPlayTime += delta;
+  
+  updatePlayheadPosition();
+  processTimelineEvents();
+  
+  requestAnimationFrame(timelineLoop);
+}
+
+function updatePlayheadPosition() {
+  const x = tlPlayTime * tlZoom;
+  document.getElementById('tl-playhead').style.left = x + 'px';
+  document.getElementById('tl-time-display').textContent = tlPlayTime.toFixed(2) + 's';
+  
+  // Auto scroll
+  const container = document.getElementById('timeline-scroll-container');
+  if (x > container.scrollLeft + container.clientWidth - 100) {
+    container.scrollLeft = x - 200;
+  }
+}
+
+function processTimelineEvents() {
+  for (let i = 0; i < 12; i++) {
+    // Find if playhead is over a clip
+    const activeClip = timelineData[i].find(c => tlPlayTime >= c.start && tlPlayTime <= (c.start + c.duration));
+    
+    if (activeClip) {
+      // Check if state changed from previous frame to avoid spamming
+      const stateId = `${activeClip.r}${activeClip.g}${activeClip.b}${activeClip.br}${activeClip.fx}`;
+      if (tlPrevStates[i] !== stateId) {
+        tlPrevStates[i] = stateId;
+        const params = {r: activeClip.r, g: activeClip.g, b: activeClip.b, br: activeClip.br, fx: activeClip.fx, sp: activeClip.sp, pw: 1};
+        sendCmd(lampIPs[i], params);
+        
+        // Update UI card too
+        lampStatus[i] = {...params};
+        updateCard(i, lampStatus[i], true);
+      }
+    } else {
+      // No clip, maybe turn off? (Optional: depending on user preference)
+      if (tlPrevStates[i] !== 'off') {
+        tlPrevStates[i] = 'off';
+        // sendCmd(lampIPs[i], {pw: 0}); // Uncomment if we want "empty space = off"
+      }
+    }
+  }
+}
+
+function clearTimeline() {
+  if (confirm('Clear the entire timeline?')) {
+    timelineData = Array.from({length:12}, () => []);
+    saveTimeline();
+    renderProTimeline();
+  }
+}
+
+// ── Automation Engine (Old Timeline) ───────────────────────
+// Keep this as "Cues" but the Timeline View is now the Pro one.
+let cues     = JSON.parse(localStorage.getItem('cues') || '[]');
+
+function saveCue() {
+  const name = document.getElementById('cue-name').value.trim();
+  if (!name) return toast('⚠ Enter cue name');
+  
+  // Save current state of ALL lamps
+  const state = lampStatus.map(s => s ? {...s} : null);
+  const id = Date.now();
+  cues.push({id, name, state});
+  localStorage.setItem('cues', JSON.stringify(cues));
+  document.getElementById('cue-name').value = '';
+  renderCues();
+  updateCueSelects();
+  toast(`💾 Saved Cue: ${name}`);
+}
+
+function triggerCue(id) {
+  const cue = cues.find(c => c.id === id);
+  if (!cue) return;
+  
+  cue.state.forEach((s, i) => {
+    if (s) {
+      lampStatus[i] = {...s};
+      updateCard(i, s, true);
+      sendCmd(lampIPs[i], {r: s.r, g: s.g, b: s.b, br: s.br, fx: s.fx, sp: s.sp, pw: s.pw});
+    }
+  });
+}
+
+function deleteCue(id) {
+  cues = cues.filter(c => c.id !== id);
+  timeline = timeline.filter(t => t.cueId !== id);
+  localStorage.setItem('cues', JSON.stringify(cues));
+  localStorage.setItem('timeline', JSON.stringify(timeline));
+  renderCues();
+  renderTimeline();
+  updateCueSelects();
+}
+
+function renderCues() {
+  const container = document.getElementById('cues-list');
+  container.innerHTML = cues.map(c => `
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#18181b; padding:10px 14px; border-radius:4px; border:1px solid var(--border);">
+      <span style="font-size:12px; font-weight:700; color:#fff;">${c.name}</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:10px;" onclick="triggerCue(${c.id})">GO</button>
+        <button class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444; padding:4px 10px; font-size:10px;" onclick="deleteCue(${c.id})">DEL</button>
+      </div>
+    </div>
+  `).join('') || '<div style="font-size:11px; color:var(--text2); text-align:center; padding:20px;">No saved cues</div>';
+}
+
+function updateCueSelects() {
+  const select = document.getElementById('step-cue');
+  if (!select) return;
+  select.innerHTML = '<option value="">Select Cue...</option>' + 
+    cues.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
 
 const FX_NAMES = ['Solid','Rainbow','Breathing','Strobe'];
 
@@ -598,6 +1344,12 @@ async function sendCmd(ip, params) {
   const i = lampIPs.indexOf(ip);
   if (i !== -1) lastAction[i] = Date.now();
   
+  // Try WebSocket first (much faster)
+  if (sockets.send(ip, params)) {
+    return true;
+  }
+  
+  // Fallback to HTTP if socket not ready
   if (pendingCmd[ip]) {
     nextCmd[ip] = params;
     return false;
@@ -629,37 +1381,45 @@ async function getStatus(ip) {
 
 // ── Poll ───────────────────────────────────────────────────
 async function pollAll() {
-  const results = await Promise.all(lampIPs.map(ip => getStatus(ip)));
-  let onlineCount = 0;
+  // We only poll via HTTP for lamps that aren't connected via WebSocket
+  const promises = lampIPs.map(async (ip, i) => {
+    if (sockets.sockets[ip] && sockets.sockets[ip].readyState === WebSocket.OPEN) {
+      return null; // Skip polling if WS is active (lamp will push updates)
+    }
+    return getStatus(ip);
+  });
+
+  const results = await Promise.all(promises);
   results.forEach((status, i) => {
     if (status) {
-      onlineCount++;
       if (liveMode || !lampStatus[i]) {
-        // In Live mode or first-time initialization, take hardware values
         lampStatus[i] = status;
-      } else {
-        // In Blind mode, preserve our local preview tweaks
-        // We only update the online status class/dot indirectly
       }
       updateCard(i, lampStatus[i], false);
     } else {
-      // Lamp is offline
-      lampStatus[i] = null;
-      updateCard(i, null);
+      // If we don't have a status AND no WebSocket, it's offline
+      const ip = lampIPs[i];
+      if (!sockets.sockets[ip] || sockets.sockets[ip].readyState !== WebSocket.OPEN) {
+        lampStatus[i] = null;
+        updateCard(i, null);
+      }
     }
   });
-  document.getElementById('online-count').innerHTML =
-    `<b>${onlineCount}</b> / 12 online`;
+  updateOnlineUI();
 }
 
 function startPolling() {
   clearInterval(pollTimer);
   pollAll();
-  pollTimer = setInterval(pollAll, 4000);
+  pollTimer = setInterval(pollAll, 6000); // Slower polling since WS handles real-time
+  
+  // Ensure all sockets are trying to connect
+  sockets.connectAll();
 }
 
 // ── Master Controls ────────────────────────────────────────
-async function sendToTargets(params) {
+function sendToTargets(params) {
+  const promises = [];
   for (let i = 0; i < lampIPs.length; i++) {
     if (currentGroup === 'all' || lampGroups[i] === currentGroup) {
       if (!lampStatus[i]) lampStatus[i] = {r: 255, g: 255, b: 255, br: 180, fx: 0, sp: 128, pw: 1, online: true};
@@ -667,7 +1427,8 @@ async function sendToTargets(params) {
       updateCard(i, lampStatus[i], true);
       
       if (liveMode) {
-        await sendCmd(lampIPs[i], params);
+        // Fire and forget (don't await in loop for parallel performance)
+        sendCmd(lampIPs[i], params);
       }
     }
   }
@@ -852,6 +1613,7 @@ function cardHTML(i) {
       </div>
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
         <div style="display:flex; align-items:center; gap:8px;">
+          <span id="mode-${i}" style="font-size:9px; font-weight:800; color:var(--text2); letter-spacing:0.5px;">🌐 HTTP</span>
           <span class="card-ip" id="ip-${i}">${ip}</span>
           <button class="btn btn-outline btn-sm" onclick="identifyLamp(${i})" style="padding: 2px 6px; font-size:10px;" title="Identify physically">💡</button>
         </div>
@@ -959,7 +1721,12 @@ async function identifyLamp(i) {
   const ip = lampIPs[i];
   if (!ip || ip.includes('x')) return toast('⚠ Invalid IP');
   toast('💡 Identifying Lamp ' + (i+1));
-  await fetch(`http://${ip}/identify`, {signal: AbortSignal.timeout(2500)}).catch(()=>{});
+  const currentBr = lampStatus[i] ? lampStatus[i].br : 180;
+  const dimBr = Math.max(10, currentBr - 80);
+  fetch(`http://${ip}/cmd?br=${dimBr}`).catch(()=>{});
+  setTimeout(() => fetch(`http://${ip}/cmd?br=${currentBr}`).catch(()=>{}), 200);
+  setTimeout(() => fetch(`http://${ip}/cmd?br=${dimBr}`).catch(()=>{}), 400);
+  setTimeout(() => fetch(`http://${ip}/cmd?br=${currentBr}`).catch(()=>{}), 600);
 }
 
 // ── Settings ───────────────────────────────────────────────
@@ -978,6 +1745,8 @@ function openSettings() {
       <input type="text" id="ip-input-${i}" value="${lampIPs[i]}" placeholder="192.168.x.x">
     </div>`).join('');
   renderGroupsSettings();
+  renderCues();
+  updateCueSelects();
   
   // Default to first tab
   const firstTab = document.querySelector('.tab-btn');
@@ -1130,7 +1899,12 @@ async function scanNetwork() {
                 el.style.borderColor = 'var(--online)';
             }
             toast(`✅ Found Lamp ${data.id} at ${ip}`);
-            fetch(`http://${ip}/identify`, {signal: AbortSignal.timeout(2500)}).catch(()=>{});
+            const currentBr = lampStatus[idx] ? lampStatus[idx].br : 180;
+            const dimBr = Math.max(10, currentBr - 80);
+            fetch(`http://${ip}/cmd?br=${dimBr}`).catch(()=>{});
+            setTimeout(() => fetch(`http://${ip}/cmd?br=${currentBr}`).catch(()=>{}), 200);
+            setTimeout(() => fetch(`http://${ip}/cmd?br=${dimBr}`).catch(()=>{}), 400);
+            setTimeout(() => fetch(`http://${ip}/cmd?br=${currentBr}`).catch(()=>{}), 600);
           }
         }
       } catch (e) { /* timeout/error */ }
@@ -1156,6 +1930,7 @@ function saveSettings() {
   }
   closeSettings();
   toast('✅ IPs saved!');
+  sockets.disconnectAll();
   startPolling();
 }
 
@@ -1168,6 +1943,7 @@ document.getElementById('settings-modal').addEventListener('click', e => {
 renderBuses();
 renderGrid();
 startPolling();
+sockets.connectAll();
 </script>
 </body>
 </html>

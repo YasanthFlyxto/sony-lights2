@@ -9,7 +9,7 @@
  */
 const char* WIFI_SSID = "Eagle home fiber" ; //-- your WiFi name
 const char* WIFI_PASS = "ge2262809" ; //-- WiFi password
-const int   LAMP_ID   = 12;               // <-- 1 to 12
+const int   LAMP_ID   = 10;               // <-- 1 to 12
 /*
  * =====================================================
  */
@@ -17,6 +17,7 @@ const int   LAMP_ID   = 12;               // <-- 1 to 12
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <WebServer.h>
+#include <WebSocketsServer.h> // <-- Add this (Install "WebSockets" by Markus Sattler)
 #include <FastLED.h>
 #include <Preferences.h>
 
@@ -28,6 +29,7 @@ const int   LAMP_ID   = 12;               // <-- 1 to 12
 
 CRGB leds[NUM_LEDS];
 WebServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(81); // WebSocket on port 81
 WiFiMulti wifiMulti;
 Preferences prefs;
 
@@ -96,6 +98,51 @@ void handleIdentify() {
   }
   FastLED.setBrightness(oldBri);
   dirty = true;
+}
+
+// ── WebSocket Event Handler ──────────────────────────
+void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+  switch(type) {
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+    case WStype_CONNECTED: {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d\n", num, ip[0], ip[1], ip[2], ip[3]);
+        // Send current status to the new client
+        handleStatus(); // This still works for HTTP, but we want to push to WS
+      }
+      break;
+    case WStype_TEXT: {
+        String msg = String((char*)payload);
+        // Simple comma-separated or JSON-like parser
+        // Format expected: "r:255,g:10,b:0,br:255,fx:0,sp:128,pw:1"
+        if (msg.indexOf("r:") != -1)  targetR = msg.substring(msg.indexOf("r:") + 2).toInt();
+        if (msg.indexOf("g:") != -1)  targetG = msg.substring(msg.indexOf("g:") + 2).toInt();
+        if (msg.indexOf("b:") != -1)  targetB = msg.substring(msg.indexOf("b:") + 2).toInt();
+        if (msg.indexOf("br:") != -1) brightness = msg.substring(msg.indexOf("br:") + 3).toInt();
+        if (msg.indexOf("fx:") != -1) effect = msg.substring(msg.indexOf("fx:") + 3).toInt();
+        if (msg.indexOf("sp:") != -1) spd = msg.substring(msg.indexOf("sp:") + 3).toInt();
+        if (msg.indexOf("pw:") != -1) power = msg.substring(msg.indexOf("pw:") + 3).toInt() != 0;
+        dirty = true;
+        break;
+      }
+  }
+}
+
+// ── Broadcast Status to all WS clients ────────────────
+void broadcastStatus() {
+  String json = "{\"id\":" + String(LAMP_ID)
+              + ",\"ip\":\"" + WiFi.localIP().toString() + "\""
+              + ",\"r\":"  + targetR
+              + ",\"g\":"  + targetG
+              + ",\"b\":"  + targetB
+              + ",\"br\":" + brightness
+              + ",\"fx\":" + effect
+              + ",\"sp\":" + spd
+              + ",\"pw\":" + (power ? 1 : 0)
+              + "}";
+  webSocket.broadcastTXT(json);
 }
 
 // ── CORS preflight ────────────────────────────────────
@@ -272,6 +319,7 @@ void setup() {
   prefs.end();
 
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false); // <-- CRITICAL: Prevents WiFi jitter/latency spikes
   
   // Add hardcoded network
   wifiMulti.addAP(WIFI_SSID, WIFI_PASS);
@@ -321,11 +369,22 @@ void setup() {
   server.on("/getwifi",   HTTP_OPTIONS, handleOptions);
   server.on("/clearwifi", HTTP_OPTIONS, handleOptions);
   server.begin();
-  Serial.println("HTTP server started.");
+  
+  webSocket.begin();
+  webSocket.onEvent(onWebSocketEvent);
+  
+  Serial.println("HTTP and WebSocket servers started.");
 }
 
 // ── Loop ──────────────────────────────────────────────
 void loop() {
   server.handleClient();
+  webSocket.loop();
   runEffect();
+  
+  // Every time something is 'dirty' (changed), broadcast to all WS clients
+  if (dirty) {
+    broadcastStatus();
+    dirty = false; // Clear flag after broadcast to prevent flooding
+  }
 }
